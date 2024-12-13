@@ -1,3 +1,5 @@
+from traceback import print_tb
+
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
 import pandas as pd
@@ -65,10 +67,10 @@ def main():
     sentimentDict = {}
     for candidate,subjectsList in subjectsDict.items():
         candidateDf = dfDict[candidate]
+        bi_sentiments = {}
+        tri_sentiments = {}
+        quad_sentiments = {}
         for subjects in subjectsList:
-            bi_sentiments = {}
-            tri_sentiments = {}
-            quad_sentiments = {}
             print("Calculating sentiments for candidate %s" % candidate)
             for subject in subjects:
                 match len(subject[0]): #Liší pro bigramy, trigramy a quadgramy
@@ -78,7 +80,7 @@ def main():
                         subject_string = ' '.join(subject[0])
                         for tweet in bi_tweets.text:
                             bi_sentiments[subject_string] = bi_sentiments.get(subject_string,0) + sentimentAnalyzer.polarity_scores(tweet)['compound'] #Sčítá compound hodnoty Vader klasifikátoru
-                        bi_sentiments[subject_string] = bi_sentiments.get(subject_string,1) / len(bi_tweets.text) if len(bi_tweets.text) != 0 else 1 #Počítá průměr, oštřené proti dělení nulou
+                        bi_sentiments[subject_string] = bi_sentiments.get(subject_string,1) / (len(bi_tweets.text) if len(bi_tweets.text) != 0 else 1) #Počítá průměr, oštřené proti dělení nulou
                         continue
                     case 3: #Stejné jako pro bigramy, ale pozměněné pro 3 hodnoty
                         tri_subjects = subjects[0][0]
@@ -87,8 +89,8 @@ def main():
                         for tweet in tri_tweets.text:
                             tri_sentiments[subject_string] = tri_sentiments.get(subject_string, 0) + \
                                                             sentimentAnalyzer.polarity_scores(tweet)['compound']
-                        tri_sentiments[subject_string] = tri_sentiments.get(subject_string, 1) / len(
-                            tri_tweets.text) if len(tri_tweets.text) != 0 else 1
+                        tri_sentiments[subject_string] = tri_sentiments.get(subject_string, 1) / (len(
+                            tri_tweets.text) if len(tri_tweets.text) != 0 else 1)
                         continue
                 # Stejné jako pro bigramy, ale pozměněné pro 4 hodnoty
                 quad_subjects = subjects[0][0]
@@ -97,12 +99,17 @@ def main():
                 for tweet in quad_tweets.text:
                     quad_sentiments[subject_string] = quad_sentiments.get(subject_string, 0) + \
                                                      sentimentAnalyzer.polarity_scores(tweet)['compound']
-                quad_sentiments[subject_string] = quad_sentiments.get(subject_string, 1) / len(
-                    quad_tweets.text) if len(quad_tweets.text) != 0 else 1
-            sentimentDict[candidate] = [bi_sentiments,tri_sentiments,quad_sentiments]
+                quad_sentiments[subject_string] = quad_sentiments.get(subject_string, 1) / (len(
+                    quad_tweets.text) if len(quad_tweets.text) != 0 else 1)
+        sentimentDict[candidate] = [bi_sentiments,tri_sentiments,quad_sentiments]
     for candidate in sentimentDict: #Vypisuje různé oblásti zájmu kandidátů a jejich oblíbenost
         print(candidate)
-        print(sentimentDict[candidate])
+        print('Bigramy')
+        print(sentimentDict[candidate][0])
+        print('Trigramy')
+        print(sentimentDict[candidate][1])
+        print('Quadgramy')
+        print(sentimentDict[candidate][2])
 
 
 
